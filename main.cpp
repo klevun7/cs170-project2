@@ -96,7 +96,6 @@ void backwardElimination(int numFeatures)
 {
     cout << "Beginning search." << endl;
 
-   
     vector<int> current_features;
     for (int i = 1; i <= numFeatures; i++)
     {
@@ -116,13 +115,11 @@ void backwardElimination(int numFeatures)
 
     best_overall_features = current_features;
 
-    
-    for (int i = 1; i <= numFeatures; i++)
+    while (current_features.size() > 1)
     {
         int feature_to_remove = -1;
         double best_accuracy = 0.0;
 
-        
         for (int j = 0; j < current_features.size(); j++)
         {
             vector<int> test_features = current_features;
@@ -138,35 +135,32 @@ void backwardElimination(int numFeatures)
 
             cout << "} accuracy is " << accuracy << "%" << endl;
 
-            if (accuracy > best_accuracy)
-            {
+            if (accuracy > best_accuracy || feature_to_remove == -1)
+            { 
                 best_accuracy = accuracy;
                 feature_to_remove = j;
             }
         }
 
-        if (feature_to_remove != -1)
+        int removed_feature = current_features[feature_to_remove];
+        current_features.erase(current_features.begin() + feature_to_remove);
+
+        cout << "Feature set { ";
+        for (int j = 0; j < current_features.size(); j++)
         {
-            int removed_feature = current_features[feature_to_remove];
-            current_features.erase(current_features.begin() + feature_to_remove);
+            cout << current_features[j] << " ";
+        }
+        cout << "} was best, accuracy is " << best_accuracy << "%\n"
+             << endl;
 
-            cout << "Feature set { ";
-            for (int j = 0; j < current_features.size(); j++)
-            {
-                cout << current_features[j] << " ";
-            }
-            cout << "} was best, accuracy is " << best_accuracy << "%\n"
-                 << endl;
-
-            if (best_accuracy > best_overall_accuracy)
-            {
-                best_overall_accuracy = best_accuracy;
-                best_overall_features = current_features;
-            }
-            else
-            {
-                cout << "(Warning, Accuracy has decreased!)" << endl;
-            }
+        if (best_accuracy > best_overall_accuracy)
+        {
+            best_overall_accuracy = best_accuracy;
+            best_overall_features = current_features;
+        }
+        else
+        {
+            cout << "(Warning, Accuracy has decreased!)" << endl;
         }
     }
 

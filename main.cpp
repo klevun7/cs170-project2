@@ -1,14 +1,44 @@
 #include <iostream>
 #include <vector>
+#include <cmath>
+#include <limits>
 
 using namespace std;
 
-double random(const vector<int> &features)
-{
-    return (rand() % 10000) / 100.0;
+vector<vector<double>> normalizeFeatures(const vector<vector<double>> &data) {}
+
+double evaluate(const vector<vector<double>> &data, const vector<int> &labels, const vector<int> &features) {
+    int correctPredictions = 0;
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        double minDistance = numeric_limits<double>::max();
+        int predictedLabel = -1;
+
+        for (size_t j = 0; j < data.size(); ++j) {
+            if (i == j) continue;
+
+            double distance;
+            for (int i = 0; i < features.size(); i++) {
+                int feature = features[i]; 
+                distance = distance + pow(data[i][feature - 1] - data[j][feature - 1], 2);
+            }
+            distance = sqrt(distance);
+            if (distance < minDistance) {
+                minDistance = distance;
+                predictedLabel = labels[j];
+            }
+        }
+
+        if (predictedLabel == labels[i]) {
+            correctPredictions = correctPredictions + 1;
+        }
+    }
+
+    return static_cast<double>(correctPredictions) / data.size() * 100.0;
 }
 
-void forwardSelection(int numFeatures)
+
+void forwardSelection(int numFeatures, const vector<vector<double>> &data, const vector<int> &labels) 
 {
     cout << "Beginning search." << endl;
 
@@ -38,7 +68,7 @@ void forwardSelection(int numFeatures)
                 vector<int> test_features = current_features;
                 test_features.push_back(feature);
 
-                double accuracy = random(test_features);
+                double accuracy = evaluate(data, labels, test_features);
                 cout << "Using feature(s): { ";
 
                 for (int j = 0; j < test_features.size(); j++)
@@ -92,7 +122,7 @@ void forwardSelection(int numFeatures)
          << endl;
 }
 
-void backwardElimination(int numFeatures)
+void backwardElimination(int numFeatures, const vector<vector<double>> &data, const vector<int> &labels) 
 {
     cout << "Beginning search." << endl;
 
@@ -103,7 +133,7 @@ void backwardElimination(int numFeatures)
     }
 
     vector<int> best_overall_features;
-    double best_overall_accuracy = random(current_features);
+    double best_overall_accuracy = evaluate(data, labels, current_features);
 
     cout << "Using all features { ";
     for (int j = 0; j < current_features.size(); j++)
@@ -125,7 +155,7 @@ void backwardElimination(int numFeatures)
             vector<int> test_features = current_features;
             test_features.erase(test_features.begin() + j);
 
-            double accuracy = random(test_features);
+            double accuracy = evaluate(data, labels, test_features);
             cout << "Using feature(s): { ";
 
             for (int k = 0; k < test_features.size(); k++)
@@ -176,16 +206,18 @@ void backwardElimination(int numFeatures)
 int main()
 {
     cout << "Welcome to Kevin and Duy Forward Selection Algorithm" << endl;
-    srand(time(0));
 
-    int numFeatures;
-    cout << "Please enter total number of features: ";
-    cin >> numFeatures;
+    vector<vector<double>> data;
+    vector<int> labels;
+
+    // read file here
+
+    data = normalizeFeatures(data);
+    int numFeatures = data[0].size();
 
     cout << "Type the number of the algorithm you want to run." << endl;
     cout << "1. Forward Selection" << endl;
     cout << "2. Backward Elimination" << endl;
-    cout << "3. Bertie\'s Special Algorithm." << endl;
 
     int choice;
     cin >> choice;
@@ -193,15 +225,12 @@ int main()
     if (choice == 1)
     {
         cout << "Using no features and random evaluation, I get an accuracy of " << (rand() % 10000) / 100.0 << "%" << endl;
-        forwardSelection(numFeatures);
+        forwardSelection(numFeatures, data, labels);
     }
     else if (choice == 2)
     {
         cout << "Using no features and random evaluation, I get an accuracy of " << (rand() % 10000) / 100.0 << "%" << endl;
-        backwardElimination(numFeatures);
-    }
-    else if (choice == 3)
-    {
+        backwardElimination(numFeatures, data, labels);
     }
     else
     {

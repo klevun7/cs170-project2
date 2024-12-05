@@ -290,7 +290,7 @@ int main()
     {
         fileName = "small-test-dataset.txt";
     }
-    else if (fileChoice = 2)
+    else if (fileChoice == 2)
     {
         fileName = "large-test-dataset.txt";
     }

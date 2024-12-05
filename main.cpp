@@ -2,43 +2,112 @@
 #include <vector>
 #include <cmath>
 #include <limits>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <chrono>
 
 using namespace std;
 
-vector<vector<double>> normalizeFeatures(const vector<vector<double>> &data) {}
+long long getCurrentTime() //
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::system_clock::now().time_since_epoch()
+    ).count();
+}
 
-double evaluate(const vector<vector<double>> &data, const vector<int> &labels, const vector<int> &features) {
+vector<vector<double>> normalizeFeatures(const vector<vector<double>> &data)
+{
+
+    if (data.empty() || data[0].empty())
+    {
+        return data;
+    }
+
+    vector<vector<double>> normalized = data;
+    int numFeatures = data[0].size();
+
+    for (int j = 0; j < numFeatures; j++)
+    {
+
+        double minVal = data[0][j];
+        double maxVal = data[0][j];
+
+        for (int i = 1; i < data.size(); i++)
+        {
+            minVal = min(minVal, data[i][j]);
+            maxVal = max(maxVal, data[i][j]);
+        }
+
+        for (int i = 0; i < data.size(); i++)
+        {
+            if (maxVal != minVal)
+            {
+                normalized[i][j] = (data[i][j] - minVal) / (maxVal - minVal);
+            }
+            else
+            {
+                normalized[i][j] = 0;
+            }
+        }
+    }
+
+    return normalized;
+}
+
+double evaluate(const vector<vector<double>> &data, const vector<int> &labels, const vector<int> &features)
+{
     int correctPredictions = 0;
 
-    for (size_t i = 0; i < data.size(); ++i) {
+    long long calcStartTime = getCurrentTime();
+
+    for (size_t i = 0; i < data.size(); ++i)
+    {
+        long long instanceStartTime = getCurrentTime();
         double minDistance = numeric_limits<double>::max();
         int predictedLabel = -1;
 
-        for (size_t j = 0; j < data.size(); ++j) {
-            if (i == j) continue;
+        for (size_t j = 0; j < data.size(); ++j)
+        {
+            if (i == j)
+                continue;
 
-            double distance;
-            for (int i = 0; i < features.size(); i++) {
-                int feature = features[i]; 
-                distance = distance + pow(data[i][feature - 1] - data[j][feature - 1], 2);
+            double distance = 0.0;
+            for (int feature : features)
+            {
+                double diff = data[i][feature - 1] - data[j][feature - 1];
+                distance += diff * diff;
             }
+
             distance = sqrt(distance);
-            if (distance < minDistance) {
+
+            if (distance < minDistance)
+            {
                 minDistance = distance;
                 predictedLabel = labels[j];
             }
         }
 
-        if (predictedLabel == labels[i]) {
+        cout << "Instance: " << i + 1
+             << " | Predicted: " << predictedLabel
+             << " | Actual: " << labels[i]
+             << " | Time: " << (getCurrentTime() - instanceStartTime) << 
+             " ms(micro)" << endl;
+
+        if (predictedLabel == labels[i])
+        {
             correctPredictions = correctPredictions + 1;
         }
     }
 
-    return static_cast<double>(correctPredictions) / data.size() * 100.0;
+    double accuracy = static_cast<double>(correctPredictions) / data.size() * 100.0;
+    cout << "Results: " << correctPredictions << " / " << data.size() << endl;
+    cout << "Accuracy: " << accuracy << "%" << endl;
+
+    return accuracy;
 }
 
-
-void forwardSelection(int numFeatures, const vector<vector<double>> &data, const vector<int> &labels) 
+void forwardSelection(int numFeatures, const vector<vector<double>> &data, const vector<int> &labels)
 {
     cout << "Beginning search." << endl;
 
@@ -122,7 +191,7 @@ void forwardSelection(int numFeatures, const vector<vector<double>> &data, const
          << endl;
 }
 
-void backwardElimination(int numFeatures, const vector<vector<double>> &data, const vector<int> &labels) 
+void backwardElimination(int numFeatures, const vector<vector<double>> &data, const vector<int> &labels)
 {
     cout << "Beginning search." << endl;
 
@@ -166,7 +235,7 @@ void backwardElimination(int numFeatures, const vector<vector<double>> &data, co
             cout << "} accuracy is " << accuracy << "%" << endl;
 
             if (accuracy > best_accuracy || feature_to_remove == -1)
-            { 
+            {
                 best_accuracy = accuracy;
                 feature_to_remove = j;
             }
@@ -209,10 +278,90 @@ int main()
 
     vector<vector<double>> data;
     vector<int> labels;
+    string fileName;
+    int fileChoice;
 
-    // read file here
+    cout << "Select the name of the file to test: " << endl;
+    cout << "1. Small Dataset" << endl;
+    cout << "2. Large Dataset" << endl;
+
+    cin >> fileChoice;
+    if (fileChoice == 1)
+    {
+        fileName = "small-test-dataset.txt";
+    }
+    else if (fileChoice = 2)
+    {
+        fileName = "large-test-dataset.txt";
+    }
+    else
+    {
+        cout << "Invalid fileName. Exiting program." << endl;
+        return 1;
+    }
+
+    ifstream inputFile(fileName);
+    if (!inputFile)
+    {
+        cout << "Error opening file. Exiting program." << endl;
+        return 1;
+    }
+
+    string line;
+    while (getline(inputFile, line))
+    {
+        istringstream iss(line);
+        double value;
+        vector<double> row;
+
+        if (!(iss >> value))
+        {
+            continue;
+        }
+        labels.push_back(static_cast<int>(value));
+
+        while (iss >> value)
+        {
+            row.push_back(value);
+        }
+
+        if (!row.empty())
+        {
+            data.push_back(row);
+        }
+    }
+
+    if (data.empty())
+    {
+        cout << "No data was read from file." << endl;
+        return 1;
+    }
 
     data = normalizeFeatures(data);
+
+    cout << "Dataset loaded successfully with " << data.size() << " instances and " << data[0].size() << " features." << endl;
+
+    vector<int> testFeatures;
+    if (data[0].size() == 10)
+    {
+        testFeatures = {3, 5, 7};
+    }
+    else if (data[0].size() == 40)
+    { 
+        testFeatures = {1, 15, 27};
+    }
+
+    if (!testFeatures.empty())
+    {
+        double accuracy = evaluate(data, labels, testFeatures);
+        cout << "Testing specified feature set {";
+        for (int f : testFeatures)
+        {
+            cout << " " << f;
+        }
+        cout << " }, accuracy: " << accuracy << "%" << endl;
+    }
+
     int numFeatures = data[0].size();
 
     cout << "Type the number of the algorithm you want to run." << endl;

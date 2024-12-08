@@ -284,6 +284,7 @@ int main()
     cout << "Select the name of the file to test: " << endl;
     cout << "1. Small Dataset" << endl;
     cout << "2. Large Dataset" << endl;
+    cout << "3. Titatanic Clean" << endl;
 
     cin >> fileChoice;
     if (fileChoice == 1)
@@ -293,6 +294,10 @@ int main()
     else if (fileChoice == 2)
     {
         fileName = "large-test-dataset.txt";
+    }
+    else if (fileChoice == 3)
+    {
+        fileName = "titanic-clean.txt";
     }
     else
     {
@@ -350,6 +355,11 @@ int main()
     { 
         testFeatures = {1, 15, 27};
     }
+    else if (data[0].size() == 4997)
+    { 
+        testFeatures = {1, 15, 27};
+    }
+
 
     if (!testFeatures.empty())
     {
@@ -373,12 +383,10 @@ int main()
 
     if (choice == 1)
     {
-        cout << "Using no features and random evaluation, I get an accuracy of " << (rand() % 10000) / 100.0 << "%" << endl;
         forwardSelection(numFeatures, data, labels);
     }
     else if (choice == 2)
     {
-        cout << "Using no features and random evaluation, I get an accuracy of " << (rand() % 10000) / 100.0 << "%" << endl;
         backwardElimination(numFeatures, data, labels);
     }
     else

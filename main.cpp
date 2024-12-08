@@ -9,7 +9,7 @@
 
 using namespace std;
 
-long long getCurrentTime() //
+long long getCurrentTime() 
 {
     return std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::system_clock::now().time_since_epoch()
@@ -284,7 +284,7 @@ int main()
     cout << "Select the name of the file to test: " << endl;
     cout << "1. Small Dataset" << endl;
     cout << "2. Large Dataset" << endl;
-    cout << "3. Titatanic Clean" << endl;
+    cout << "3. Titanic Clean" << endl;
 
     cin >> fileChoice;
     if (fileChoice == 1)
@@ -297,7 +297,7 @@ int main()
     }
     else if (fileChoice == 3)
     {
-        fileName = "titanic-clean.txt";
+        fileName = "titanic clean.txt";
     }
     else
     {
@@ -355,9 +355,9 @@ int main()
     { 
         testFeatures = {1, 15, 27};
     }
-    else if (data[0].size() == 4997)
+    else if (data[0].size() == 6)
     { 
-        testFeatures = {1, 15, 27};
+        testFeatures = {2};
     }
 
 

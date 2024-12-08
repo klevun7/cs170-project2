@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iomanip>
 #include <chrono>
+#include <algorithm>
 
 using namespace std;
 
@@ -16,8 +17,34 @@ long long getCurrentTime()
     ).count();
 }
 
+double defaultRate(const vector<int> &labels)
+{
+    int maxLabel = *max_element(labels.begin(), labels.end());
+    int minLabel = *min_element(labels.begin(), labels.end());
+
+    vector<int> counts(maxLabel - minLabel + 1, 0);
+    for (int i = 0; i < labels.size(); i++)
+    {
+        counts[labels[i] - minLabel]++;
+    }
+
+    int majorityCount = 0;
+    for (int i = 0; i < counts.size(); i++)
+    {
+        if (counts[i] > majorityCount)
+        {
+            majorityCount = counts[i];
+        }
+    }
+
+    double accuracy = round(static_cast<double>(majorityCount) / labels.size() * 100.0 * 100) / 100;
+
+    return accuracy;
+}
+
 vector<vector<double>> normalizeFeatures(const vector<vector<double>> &data)
 {
+    cout << "Please wait while I normalize the data... Done!" << endl;
 
     if (data.empty() || data[0].empty())
     {
@@ -87,29 +114,30 @@ double evaluate(const vector<vector<double>> &data, const vector<int> &labels, c
                 predictedLabel = labels[j];
             }
         }
-
+        /*
         cout << "Instance: " << i + 1
              << " | Predicted: " << predictedLabel
              << " | Actual: " << labels[i]
              << " | Time: " << (getCurrentTime() - instanceStartTime) << 
              " ms(micro)" << endl;
-
+        */
         if (predictedLabel == labels[i])
         {
             correctPredictions = correctPredictions + 1;
         }
     }
 
-    double accuracy = static_cast<double>(correctPredictions) / data.size() * 100.0;
+    double accuracy = round(static_cast<double>(correctPredictions) / data.size() * 100.0 * 100) / 100;
+    /*
     cout << "Results: " << correctPredictions << " / " << data.size() << endl;
     cout << "Accuracy: " << accuracy << "%" << endl;
-
+    */
     return accuracy;
 }
 
 void forwardSelection(int numFeatures, const vector<vector<double>> &data, const vector<int> &labels)
 {
-    cout << "Beginning search." << endl;
+    cout << "Beginning search.\n" << endl;
 
     vector<int> current_features;
     vector<int> best_overall_features;
@@ -138,11 +166,15 @@ void forwardSelection(int numFeatures, const vector<vector<double>> &data, const
                 test_features.push_back(feature);
 
                 double accuracy = evaluate(data, labels, test_features);
-                cout << "Using feature(s): { ";
+                cout << "Using feature(s): {";
 
                 for (int j = 0; j < test_features.size(); j++)
                 {
-                    cout << test_features[j] << " ";
+                    if (j != 0)
+                    {
+                        cout << ",";
+                    }
+                    cout << test_features[j];
                 }
 
                 cout << "} accuracy is " << accuracy << "%" << endl;
@@ -158,11 +190,15 @@ void forwardSelection(int numFeatures, const vector<vector<double>> &data, const
         if (best_feature != -1)
         {
             current_features.push_back(best_feature);
-            cout << "Feature set { ";
+            cout << "\nFeature set {";
 
             for (int j = 0; j < current_features.size(); j++)
             {
-                cout << current_features[j] << " ";
+                if (j != 0) 
+                {
+                    cout << ",";
+                }
+                cout << current_features[j];
             }
 
             cout << "} was best, accuracy is " << best_accuracy << "%\n"
@@ -175,16 +211,20 @@ void forwardSelection(int numFeatures, const vector<vector<double>> &data, const
             }
             else
             {
-                cout << "(Warning, Accuracy has decreased!)" << endl;
+                cout << "(Warning, Accuracy has decreased!)\n" << endl;
             }
         }
     }
 
-    cout << "Finished search!! The best feature subset is { ";
+    cout << "Finished search!! The best feature subset is {";
 
     for (int j = 0; j < best_overall_features.size(); j++)
     {
-        cout << best_overall_features[j] << " ";
+        if (j != 0) 
+        {
+            cout << ",";
+        }
+        cout << best_overall_features[j];
     }
 
     cout << "}, which has an accuracy of " << best_overall_accuracy << "%\n"
@@ -193,7 +233,7 @@ void forwardSelection(int numFeatures, const vector<vector<double>> &data, const
 
 void backwardElimination(int numFeatures, const vector<vector<double>> &data, const vector<int> &labels)
 {
-    cout << "Beginning search." << endl;
+    cout << "Beginning search.\n" << endl;
 
     vector<int> current_features;
     for (int i = 1; i <= numFeatures; i++)
@@ -204,10 +244,14 @@ void backwardElimination(int numFeatures, const vector<vector<double>> &data, co
     vector<int> best_overall_features;
     double best_overall_accuracy = evaluate(data, labels, current_features);
 
-    cout << "Using all features { ";
+    cout << "Using features {";
     for (int j = 0; j < current_features.size(); j++)
     {
-        cout << current_features[j] << " ";
+        if (j != 0)
+        {
+            cout << ",";
+        }
+        cout << current_features[j];
     }
     cout << "}, accuracy is " << best_overall_accuracy << "%\n"
          << endl;
@@ -225,11 +269,15 @@ void backwardElimination(int numFeatures, const vector<vector<double>> &data, co
             test_features.erase(test_features.begin() + j);
 
             double accuracy = evaluate(data, labels, test_features);
-            cout << "Using feature(s): { ";
+            cout << "Using feature(s): {";
 
             for (int k = 0; k < test_features.size(); k++)
             {
-                cout << test_features[k] << " ";
+                if (k != 0)
+                {
+                    cout << ",";
+                }
+                cout << test_features[k];
             }
 
             cout << "} accuracy is " << accuracy << "%" << endl;
@@ -244,10 +292,14 @@ void backwardElimination(int numFeatures, const vector<vector<double>> &data, co
         int removed_feature = current_features[feature_to_remove];
         current_features.erase(current_features.begin() + feature_to_remove);
 
-        cout << "Feature set { ";
+        cout << "\nFeature set {";
         for (int j = 0; j < current_features.size(); j++)
         {
-            cout << current_features[j] << " ";
+            if (j != 0)
+            {
+                cout << ",";
+            }
+            cout << current_features[j];
         }
         cout << "} was best, accuracy is " << best_accuracy << "%\n"
              << endl;
@@ -259,14 +311,18 @@ void backwardElimination(int numFeatures, const vector<vector<double>> &data, co
         }
         else
         {
-            cout << "(Warning, Accuracy has decreased!)" << endl;
+            cout << "(Warning, Accuracy has decreased!)\n" << endl;
         }
     }
 
-    cout << "Finished search!! The best feature subset is { ";
+    cout << "Finished search!! The best feature subset is {";
     for (int j = 0; j < best_overall_features.size(); j++)
     {
-        cout << best_overall_features[j] << " ";
+        if (j != 0)
+        {
+            cout << ",";
+        }
+        cout << best_overall_features[j];
     }
     cout << "}, which has an accuracy of " << best_overall_accuracy << "%\n"
          << endl;
@@ -274,37 +330,15 @@ void backwardElimination(int numFeatures, const vector<vector<double>> &data, co
 
 int main()
 {
-    cout << "Welcome to Kevin and Duy Forward Selection Algorithm" << endl;
+    cout << "Welcome to Kevin and Duy Feature Selection Algorithm" << endl;
 
     vector<vector<double>> data;
     vector<int> labels;
     string fileName;
-    int fileChoice;
 
-    cout << "Select the name of the file to test: " << endl;
-    cout << "1. Small Dataset" << endl;
-    cout << "2. Large Dataset" << endl;
-    cout << "3. Titanic Clean" << endl;
+    cout << "Type in the name of the file to test : ";
 
-    cin >> fileChoice;
-    if (fileChoice == 1)
-    {
-        fileName = "small-test-dataset.txt";
-    }
-    else if (fileChoice == 2)
-    {
-        fileName = "large-test-dataset.txt";
-    }
-    else if (fileChoice == 3)
-    {
-        fileName = "titanic clean.txt";
-    }
-    else
-    {
-        cout << "Invalid fileName. Exiting program." << endl;
-        return 1;
-    }
-
+    getline(cin, fileName);
     ifstream inputFile(fileName);
     if (!inputFile)
     {
@@ -342,10 +376,10 @@ int main()
         return 1;
     }
 
+    cout << "This dataset has " << data[0].size() << " features (not including the class attribute), with " << data.size() << " instances." << endl;
+
     data = normalizeFeatures(data);
-
-    cout << "Dataset loaded successfully with " << data.size() << " instances and " << data[0].size() << " features." << endl;
-
+/*
     vector<int> testFeatures;
     if (data[0].size() == 10)
     {
@@ -371,27 +405,42 @@ int main()
         }
         cout << " }, accuracy: " << accuracy << "%" << endl;
     }
-
+*/
     int numFeatures = data[0].size();
+    int choice = 0;
 
-    cout << "Type the number of the algorithm you want to run." << endl;
-    cout << "1. Forward Selection" << endl;
-    cout << "2. Backward Elimination" << endl;
+    while (true)
+    {
+        cout << "Type the number of the algorithm you want to run." << endl;
+        cout << "1. Forward Selection" << endl;
+        cout << "2. Backward Elimination" << endl;
 
-    int choice;
-    cin >> choice;
+        cin >> choice;
 
-    if (choice == 1)
-    {
-        forwardSelection(numFeatures, data, labels);
-    }
-    else if (choice == 2)
-    {
-        backwardElimination(numFeatures, data, labels);
-    }
-    else
-    {
-        cout << "Invalid choice. Please select either 1 or 2." << endl;
+        if (cin.fail())
+        {
+            cin.clear(); 
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+            cout << "Invalid input. Please enter a number (1 or 2)." << endl;
+            continue; 
+        }
+
+        if (choice == 1)
+        {
+            cout << "Running nearest neighbor with no features (default rate), using “leaving-one-out” evaluation, I get an accuracy of " << defaultRate(labels) << "%\n" << endl;
+            forwardSelection(numFeatures, data, labels);
+            break;
+        }
+        else if (choice == 2)
+        {
+            cout << "Running nearest neighbor with no features (default rate), using “leaving-one-out” evaluation, I get an accuracy of " << defaultRate(labels) << "%\n" << endl;
+            backwardElimination(numFeatures, data, labels);
+            break;
+        }
+        else
+        {
+            cout << "Invalid choice. Please select either 1 or 2." << endl;
+        }
     }
 
     return 0;

@@ -445,3 +445,14 @@ int main()
 
     return 0;
 }
+
+
+/*
+Group: Kevin Cao - kcao040, Duy Chau - dchau029 Lecture Section: 001
+Small Dataset Results:
+    -Forward: {5,3} Accuracy: 92%
+    -Backward: {5,3} Accuracy: 92%
+Large Dataset Results:
+    -Forward: {27,1} Accuracy: 95.5%
+    -Backward: {27,6} Accuracy: 94%
+*/
